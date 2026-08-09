@@ -26,6 +26,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html/
 
+# Create default .env so artisan works at build time (values are overridden by Render env vars)
+RUN cp .env.example .env
+
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
@@ -36,15 +39,19 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 # Install NPM dependencies and build assets
 RUN npm install && npm run build
 
-# Set permissions
+# Set permissions (Apache runs as www-data)
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Configure Apache to serve from public directory
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-# Expose port 10000 (Render default)
+# Expose port 10000 (Render default) - real port is set from $PORT at runtime
 EXPOSE 10000
 
-# Start Apache
+# Copy startup entrypoint (sets Apache port from $PORT, bootstraps APP_KEY)
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

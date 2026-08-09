@@ -20,7 +20,19 @@ rm -f /var/www/html/bootstrap/cache/packages.php /var/www/html/bootstrap/cache/s
 echo ">>> Regenerating package manifests..."
 php artisan package:discover --ansi
 
-# 3) Keep cache dirs writable by the web server user
+# 4) Run pending migrations (Render free tier has no shell; this is idempotent).
+if [ -n "$DB_HOST" ]; then
+    echo ">>> Running migrations..."
+    php artisan migrate --force --no-interaction || echo ">>> migrate FAILED (non-fatal, app may still start)"
+    if [ "$RUN_SEED" = "true" ]; then
+        echo ">>> Seeding database..."
+        php artisan db:seed --force --no-interaction || echo ">>> seed FAILED (non-fatal)"
+    fi
+else
+    echo ">>> DB_HOST not set - skipping migrations"
+fi
+
+# 5) Keep cache dirs writable by the web server user
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 exec "$@"

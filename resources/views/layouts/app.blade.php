@@ -140,10 +140,11 @@
     <!-- MOBILE BOTTOM NAV (lg:hidden)                -->
     <!-- ============================================ -->
     <nav class="fixed bottom-0 inset-x-0 z-50 lg:hidden bg-[#0d0d0d]/95 backdrop-blur-xl border-t border-[#1d1d1d] pb-[env(safe-area-inset-bottom)]">
-        <div class="grid grid-cols-4">
+        <div class="grid grid-cols-5">
             @php
                 $mobileItems = [
                     ['route' => 'app.home',           'label' => 'Home',     'icon' => 'M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25'],
+                    ['route' => 'ai.coach',           'label' => 'AI',       'icon' => 'M9.813 15.904L11.75 18L9.25 15.25M15 15L20 20M11.1 7.6l.7 7.4h3.3l.6-4.1 2.6 1.4 1.2.1M3 3l1 12.5M10.5 10.5L7.5 8.75M8.5 17.5l-1 4.5'],
                     ['route' => 'workouts.generate',  'label' => 'Category', 'icon' => 'M20.42 4.58a5.4 5.4 0 00-7.65 0L9.83 7.52l7.65 7.65 2.94-2.94a5.4 5.4 0 000-7.65zM4.5 19.5L3 21l5.5-1.5 9.5-9.5-4.5-4.5-9.5 9.5-1.5 5.5z'],
                     ['route' => 'programs.index',     'label' => 'Save',     'icon' => 'M8 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V7.5L16.5 2H8zM16 22v-6h5M9 12.5l.757 1.514L12 15l-2.243 1.486L9 18l-.757-1.486L6 15l2.243-1.514L9 12.5z'],
                     ['route' => 'profile.edit',       'label' => 'Profile',  'icon' => 'M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z'],

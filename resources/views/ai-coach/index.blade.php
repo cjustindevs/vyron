@@ -5,7 +5,7 @@
 
 @section('content')
 
-<div class="flex h-dvh w-full overflow-hidden bg-[#0A0A0A]">
+<div class="flex h-[calc(100dvh_-_env(safe-area-inset-bottom)_-_4rem)] lg:h-dvh w-full overflow-hidden bg-[#0A0A0A]">
 
     {{-- ==================== COACH SIDEBAR ==================== --}}
     <aside id="coachSidebar"

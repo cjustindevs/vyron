@@ -36,7 +36,8 @@ RUN rm -rf vendor \
     && composer install --optimize-autoloader --no-dev --no-interaction \
     && php -r "require '/var/www/html/vendor/autoload.php'; foreach (['Illuminate\\\\Filesystem\\\\Filesystem', 'Illuminate\\\\Foundation\\\\Application', 'Illuminate\\\\Container\\\\Container', 'Illuminate\\\\Events\\\\Dispatcher'] as \\$c) { if (!class_exists(\\$c)) { fwrite(STDERR, 'AUTOLOAD ERROR: ' . \\$c . ' missing\\n'); exit(1); } } echo 'Autoload sanity check: OK\\n';" \
     && rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
-    && php artisan package:discover --ansi
+    && php artisan package:discover --ansi \
+    && php -r "require '/var/www/html/vendor/autoload.php'; \\$app = require '/var/www/html/bootstrap/app.php'; \\$app->boot(); echo (\\$app['files'] instanceof Illuminate\\\\Filesystem\\\\Filesystem) ? 'LARAVEL BOOT CHECK: OK\\n' : 'LARAVEL BOOT CHECK: files wrong\\n';"
 
 # Install Node.js and npm
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \

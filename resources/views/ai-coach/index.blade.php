@@ -5,7 +5,7 @@
 
 @section('content')
 
-<div class="flex h-screen w-full overflow-hidden bg-[#0A0A0A]">
+<div class="flex h-dvh w-full overflow-hidden bg-[#0A0A0A]">
 
     {{-- ==================== COACH SIDEBAR ==================== --}}
     <aside id="coachSidebar"
@@ -170,7 +170,7 @@
         </div>
 
         {{-- Glass input --}}
-        <div class="glass-strong border-t border-white/10 px-3 sm:px-8 py-4">
+        <div class="glass-strong border-t border-white/10 px-3 sm:px-8 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
             <div class="max-w-4xl mx-auto">
                 <div class="flex items-end gap-2.5">
                     <textarea id="messageInput" rows="1" placeholder="Ask for a plan, a setup, or the science behind it…"

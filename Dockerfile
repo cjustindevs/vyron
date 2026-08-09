@@ -29,8 +29,14 @@ COPY . /var/www/html/
 # Create default .env so artisan works at build time (values are overridden by Render env vars)
 RUN cp .env.example .env
 
-# Install PHP dependencies
-RUN composer install --optimize-autoloader --no-dev
+# Install PHP dependencies from scratch and VERIFY the autoloader can load Laravel core classes.
+# Fails the build if the classmap is broken (prevents "Target class [files] does not exist" at runtime).
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN rm -rf vendor \
+    && composer install --optimize-autoloader --no-dev --no-interaction \
+    && php -r "require '/var/www/html/vendor/autoload.php'; foreach (['Illuminate\\\\Filesystem\\\\Filesystem', 'Illuminate\\\\Foundation\\\\Application', 'Illuminate\\\\Container\\\\Container', 'Illuminate\\\\Events\\\\Dispatcher'] as \\$c) { if (!class_exists(\\$c)) { fwrite(STDERR, 'AUTOLOAD ERROR: ' . \\$c . ' missing\\n'); exit(1); } } echo 'Autoload sanity check: OK\\n';" \
+    && rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
+    && php artisan package:discover --ansi
 
 # Install Node.js and npm
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \

@@ -14,6 +14,12 @@ if [ -z "$APP_KEY" ]; then
     fi
 fi
 
+# 3) Regenerate package manifests fresh on every boot. Stale bootstrap/cache
+#    manifests are a common cause of "Target class [files] does not exist".
+rm -f /var/www/html/bootstrap/cache/packages.php /var/www/html/bootstrap/cache/services.php
+echo ">>> Regenerating package manifests..."
+php artisan package:discover --ansi
+
 # 3) Keep cache dirs writable by the web server user
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 

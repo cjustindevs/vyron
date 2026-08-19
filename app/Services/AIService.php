@@ -201,59 +201,93 @@ PROMPT;
 
     private function request(array $messages, ?string $feature = null): array
     {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout((int) config('groq.timeout', 60))
-                ->post($this->apiUrl, [
-                    'model' => $this->model,
-                    'messages' => $messages,
-                    'temperature' => $this->temperature,
-                    'max_tokens' => $this->maxTokens,
-                ]);
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ])->timeout((int) config('groq.timeout', 60))
+                    ->post($this->apiUrl, [
+                        'model' => $this->model,
+                        'messages' => $messages,
+                        'temperature' => $this->temperature,
+                        'max_tokens' => $this->maxTokensFor($feature),
+                    ]);
 
-            if ($response->successful()) {
-                $text = $response->json('choices.0.message.content', '');
+                if ($response->successful()) {
+                    $text = $response->json('choices.0.message.content', '');
 
-                if (empty($text)) {
-                    Log::warning('AI returned an empty response', ['feature' => $feature]);
+                    if (empty($text)) {
+                        Log::warning('AI returned an empty response', ['feature' => $feature]);
+
+                        return [
+                            'success' => false,
+                            'text' => $this->getFallbackResponse($feature),
+                            'error' => 'Empty response from AI',
+                        ];
+                    }
 
                     return [
-                        'success' => false,
-                        'text' => $this->getFallbackResponse($feature),
-                        'error' => 'Empty response from AI',
+                        'success' => true,
+                        'text' => $text,
                     ];
                 }
 
+                // 429 = rate limited. Wait out the bucket reset and retry once.
+                if ($response->status() === 429 && $attempt < 2) {
+                    $retryAfter = (int) $response->header('Retry-After', 2);
+                    $retryAfter = max(1, min($retryAfter, 30));
+                    sleep($retryAfter);
+                    continue;
+                }
+
+                Log::error('AI API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'feature' => $feature,
+                ]);
+
                 return [
-                    'success' => true,
-                    'text' => $text,
+                    'success' => false,
+                    'text' => $this->getFallbackResponse($feature),
+                    'error' => 'API request failed (HTTP ' . $response->status() . ')',
+                ];
+            } catch (\Exception $e) {
+                Log::error('AI API Exception', [
+                    'message' => $e->getMessage(),
+                    'feature' => $feature,
+                ]);
+
+                return [
+                    'success' => false,
+                    'text' => $this->getFallbackResponse($feature),
+                    'error' => $e->getMessage(),
                 ];
             }
+        }
 
-            Log::error('AI API Error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-                'feature' => $feature,
-            ]);
+        return [
+            'success' => false,
+            'text' => $this->getFallbackResponse($feature),
+            'error' => 'API request failed (HTTP 429)',
+        ];
+    }
 
-            return [
-                'success' => false,
-                'text' => $this->getFallbackResponse($feature),
-                'error' => 'API request failed (HTTP ' . $response->status() . ')',
-            ];
-        } catch (\Exception $e) {
-            Log::error('AI API Exception', [
-                'message' => $e->getMessage(),
-                'feature' => $feature,
-            ]);
+    /**
+     * Per-feature output token caps so long chat calls stay within the
+     * free-tier tokens-per-minute budget.
+     */
+    private function maxTokensFor(?string $feature): int
+    {
+        switch ($feature) {
+            case 'ai_coach':
+                return min($this->maxTokens, 1024);
 
-            return [
-                'success' => false,
-                'text' => $this->getFallbackResponse($feature),
-                'error' => $e->getMessage(),
-            ];
+            case 'progress_analysis':
+                return min($this->maxTokens, 512);
+
+            default:
+                return $this->maxTokens;
         }
     }
 

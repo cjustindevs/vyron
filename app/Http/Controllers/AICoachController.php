@@ -54,12 +54,15 @@ class AICoachController extends Controller
         $user = Auth::user();
         $userMessage = $request->input('message');
 
-        // Pass the recent chat history so the AI remembers the conversation
+        // Pass the recent chat history so the AI remembers the conversation.
+        // Keep only the last 2 turns (4 messages), truncated, to stay well
+        // under Groq's free-tier 8K tokens-per-minute limit.
         $history = $this->getConversationHistory()
             ->map(fn ($msg) => [
                 'role' => $msg['role'],
-                'content' => $msg['content'],
+                'content' => Str::limit($msg['content'], 800),
             ])
+            ->take(-4)
             ->values()
             ->toArray();
 

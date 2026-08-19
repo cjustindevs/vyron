@@ -16,7 +16,7 @@ class AIService
     public function __construct()
     {
         $this->apiKey = config('groq.api_key');
-        $this->model = config('groq.model', 'llama-3.3-70b-versatile');
+        $this->model = config('groq.model', 'openai/gpt-oss-120b');
         $this->temperature = (float) config('groq.temperature', 0.7);
         $this->maxTokens = (int) config('groq.max_tokens', 2048);
         $this->apiUrl = config('groq.api_url', 'https://api.groq.com/openai/v1/chat/completions');
